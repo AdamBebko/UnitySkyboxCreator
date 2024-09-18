@@ -32,4 +32,3 @@ In Window > Package manager, select "my registries" from the dropdown
 Under the Adam Bebko registry, select the package and update to the most recent version
 
 
-
