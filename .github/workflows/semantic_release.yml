@@ -1,0 +1,89 @@
+name: Create Release
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Semantic release
+        uses: cycjimmy/semantic-release-action@v4
+        id: semantic
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+          branch: master
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Check semantic release worked
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          echo ${{ steps.semantic.outputs.new_release_version }}
+          echo ${{ steps.semantic.outputs.new_release_major_version }}
+          echo ${{ steps.semantic.outputs.new_release_minor_version }}
+          echo ${{ steps.semantic.outputs.new_release_patch_version }}  
+      - name: Create upm branch
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          git branch -d upm &> /dev/null || echo upm branch not found
+          git subtree split -P "$PKG_ROOT" -b upm
+          git checkout upm
+          if [[ -d "Samples" ]]; then
+            git mv Samples Samples~
+            rm -f Samples.meta
+            git config --global user.name 'github-bot'
+            git config --global user.email 'github-bot@users.noreply.github.com'
+            echo Configuring personal access token
+            
+            # This step is super important to ensure credentials are properly set up.
+            git config --global url.https://${{ secrets.GH_TOKEN }}@github.com/.insteadOf https://github.com/
+            
+            echo Comitting update to Samples folder
+            git commit -am "fix: Samples => Samples~"
+          fi
+          echo Pushing upm branch...
+          git push -f -u origin upm
+          echo Finished pushing upm branch
+        env:
+          token: ${{ secrets.GH_TOKEN }}
+          PKG_ROOT: SkyboxCreator_Project/Packages/SkyboxCreator
+      - name: Create upm git tag
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          git tag $TAG upm
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TAG: ${{ steps.semantic.outputs.new_release_version }}
+      - name: Setup Node
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+      - name: Publish to npm
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: |
+          yarn install
+          git checkout upm
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+
