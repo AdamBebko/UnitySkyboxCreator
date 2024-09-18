@@ -66,7 +66,6 @@ namespace AdamsTools.SkyboxCreator
             // Cleanup
             _cameraToBake.transform.position = initialCameraPosition;
             _cameraToBake.transform.rotation = initialCameraRotation;
-            _cameraToBake.targetTexture = initialRenderTexture;
             _cameraToBake.fieldOfView = initialFieldOfView;
             QualitySettings.antiAliasing = initialAntiAliasing;
         
@@ -106,21 +105,22 @@ namespace AdamsTools.SkyboxCreator
         Texture2D RenderCubeImages()
         {
             Texture2D cubeImage = new Texture2D(_resolution*NumCubeSides, _resolution, TextureFormat.RGBA32, false);
+            RenderTexture renderTexture = new RenderTexture(_resolution, _resolution, 24);
+            
+            RenderTexture initialRenderTexture = _cameraToBake.targetTexture;
+            _cameraToBake.targetTexture = renderTexture;
+            
             for (int i = 0; i < NumCubeSides; i++)
             {
-                RenderTexture renderTexture = new RenderTexture(_resolution, _resolution, 24);
-                _cameraToBake.targetTexture = renderTexture;
-            
                 _cameraToBake.transform.eulerAngles = _photoDirections[i];
                 _cameraToBake.Render();
-            
-                // Read from render texture
+                
                 RenderTexture.active = renderTexture;
                 cubeImage.ReadPixels(new Rect(0, 0, _resolution, _resolution), i*_resolution, 0);
                 RenderTexture.active = null;
-            
-                renderTexture.Release();
             }
+            renderTexture.Release();
+            _cameraToBake.targetTexture = initialRenderTexture;
             return cubeImage;
         }
     }
