@@ -1,0 +1,12 @@
+{
+  "name": "com.adambebko.skyboxcreator",
+  "version": "0.0.1",
+  "displayName": "Adam's Skybox Creator",
+  "description": "Create a skybox from a camera location in your scene",
+  "unity": "6000.0",
+  "author": {
+    "name": "Adam Bebko",
+    "email": "adambebko@gmail.com",
+    "url": "https://adambebko.com"
+  }
+}
