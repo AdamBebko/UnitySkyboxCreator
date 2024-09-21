@@ -7,7 +7,7 @@
     ["@semantic-release/changelog", { "preset": "angular" }],
     ["@semantic-release/npm", { "npmPublish": false, "pkgRoot": "SkyboxCreator_Project/Packages/SkyboxCreator" }],
     ["@semantic-release/git", {
-      "assets": ["SkyboxCreator_Project/Packages/SkyboxCreator/package.json", "SkyboxCreator_Project/Packages/SkyboxCreator/CHANGELOG.md"],
+      "assets": ["SkyboxCreator_Project/Packages/SkyboxCreator/package.json", "CHANGELOG.md"],
       "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
     }],
     "@semantic-release/github"
